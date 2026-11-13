@@ -1,0 +1,71 @@
+package fr.grappe.app.ui
+
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import fr.grappe.app.model.Tasting
+import fr.grappe.app.ui.screens.*
+import fr.grappe.app.ui.theme.*
+
+private enum class Destination { Home, Editor, Profile, About }
+
+@Composable
+fun GrappeApp(viewModel: GrappeViewModel) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    var destination by rememberSaveable { mutableStateOf(Destination.Home) }
+    var editing by rememberSaveable { mutableStateOf(false) }
+    // Le brouillon est sérialisé pour survivre à une rotation pendant la modification.
+    var draftJson by rememberSaveable { mutableStateOf("") }
+    val snackbar = remember { SnackbarHostState() }
+
+    fun openEditor(tasting: Tasting? = null) {
+        val user = state.user ?: return
+        val draft = tasting ?: Tasting(ownerId = user.id, author = user.name)
+        draftJson = kotlinx.serialization.json.Json.encodeToString(Tasting.serializer(), draft)
+        editing = tasting != null
+        destination = Destination.Editor
+    }
+
+    LaunchedEffect(state.message) {
+        state.message?.let { snackbar.showSnackbar(it); viewModel.clearMessage() }
+    }
+    LaunchedEffect(state.user?.id) { if (state.user == null) destination = Destination.Home }
+    BackHandler(enabled = state.user != null && destination != Destination.Home) {
+        if (!state.busy) destination = Destination.Home
+    }
+    GrappeTheme {
+        Scaffold(containerColor = Cream, snackbarHost = { SnackbarHost(snackbar) }, bottomBar = {
+            if (state.user != null) NavigationBar(containerColor = Paper, tonalElevation = 0.dp) {
+                NavigationBarItem(destination == Destination.Home, { if (!state.busy) destination = Destination.Home },
+                    icon = { Icon(Icons.Outlined.Home, null) }, label = { Text("Accueil") })
+                NavigationBarItem(destination == Destination.Editor, { if (!state.busy) openEditor() },
+                    icon = { Icon(Icons.Outlined.AddCircle, null) }, label = { Text("Publier") })
+                NavigationBarItem(destination == Destination.Profile || destination == Destination.About, { if (!state.busy) destination = Destination.Profile },
+                    icon = { Icon(Icons.Outlined.PersonOutline, null) }, label = { Text("Profil") })
+            }
+        }) { padding ->
+            Column(Modifier.fillMaxSize().padding(padding).imePadding()) {
+                if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
+                if (state.user == null) AuthScreen(state.busy, viewModel::enterDemo, viewModel::authenticate)
+                else when (destination) {
+                    Destination.Home -> HomeScreen(state, { openEditor() }, { openEditor(it) }, viewModel::delete, viewModel::refresh, viewModel::discoverWines)
+                    Destination.Editor -> {
+                        val initial = remember(draftJson) { kotlinx.serialization.json.Json.decodeFromString(Tasting.serializer(), draftJson) }
+                        EditorScreen(initial, editing, state.busy,
+                            { viewModel.save(it) { destination = Destination.Home } }, { destination = Destination.Home })
+                    }
+                    Destination.Profile -> ProfileScreen(state, viewModel::updateProfile, viewModel::changePassword,
+                        { destination = Destination.About }, viewModel::signOut)
+                    Destination.About -> AboutScreen { destination = Destination.Profile }
+                }
+            }
+        }
+    }
+}
