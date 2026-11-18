@@ -1,3 +1,21 @@
+# Vérification de la version simplifiée — 17 novembre 2026
+
+- Compilation démo et cloud réussie ; sept tests unitaires réussis dans chaque variante (cinq validations et deux tests de statistiques).
+- Dernière version démo recompilée après limitation de l'exemple API à un seul vin.
+- Parcours `SmokeTest.ps1` réussi sur `emulator-5554` : création, modification avec même identifiant, persistance après arrêt/redémarrage, suppression confirmée.
+- Inspection visuelle de la bibliothèque, du profil et d'À propos sur téléphone, puis du formulaire avec une taille logique de tablette sur le même émulateur. Taille et densité d'origine rétablies ensuite. Ce contrôle ne remplace pas un essai sur une tablette physique.
+- Les trois libellés de statistiques sont présents. Le profil des exemples affiche trois vins, deux régions et une moyenne de 4,3.
+- Le bouton Ktor d'À propos a affiché « Emporda 2012 · Maselva » depuis SampleAPIs. Les exemples de l'API ne sont pas ajoutés au carnet.
+- Le test attend le chargement après redémarrage et envoie les caractères progressivement sur l'émulateur lent.
+- Android 35, Temurin 17, WHPX opérationnel. Le tutoriel de saisie au stylet de Gboard a été désactivé dans cet émulateur car il interceptait la saisie automatisée.
+- L'accès cloud réel n'a pas été testé dans cette session : le clone ne contient pas les paramètres locaux Supabase. Compiler `cloudDebug` ne valide ni les identifiants ni les permissions distantes.
+- Aucune migration serveur appliquée. La requête et le cache filtrent le propriétaire, mais la politique SELECT historique autorise toujours les lectures par les autres comptes connectés.
+- Graphify actualisé pour le code Kotlin ; extraction SQL indisponible (`tree_sitter_sql` manquant). La documentation est contrôlée directement.
+
+Les vérifications ci-dessous sont historiques et ne décrivent pas le nouvel accueil ni le nouveau formulaire.
+
+---
+
 # Vérifications effectuées le 13 novembre 2026
 
 ## Compilation et tests

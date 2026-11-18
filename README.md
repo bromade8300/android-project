@@ -4,6 +4,8 @@ Carnet de dégustation Android en **Kotlin + Jetpack Compose**, inspiré des maq
 
 Documentation complète : [guide du projet](doc/GUIDE_PROJET.md), [journal de réalisation](doc/JOURNAL_REALISATION.md), [architecture](doc/ARCHITECTURE.md) et [vérifications](doc/VERIFICATION.md). Les comptes et clés demandés sont regroupés dans [les accès locaux](doc/ACCES_LOCAL.md), fichier exclu de Git.
 
+Maquettes de la version simplifiée : [galerie et SVG modifiables](doc/maquettes-simplifiees/index.html), [PDF pour l'oral](output/pdf/Grappe-maquettes-simplifiees.pdf).
+
 ## Lancer sur ce PC
 
 Double-cliquer sur **Lancer-Grappe.cmd**, puis choisir **Explorer la démo**. Le premier lancement compile l'application et ouvre un téléphone Android virtuel.
@@ -26,19 +28,23 @@ Pour ouvrir le code : **Ouvrir-Android-Studio.cmd**. Choisir le JDK **Temurin 17
 
 Les scripts utilisent le SDK dans `%LOCALAPPDATA%\Android\Sdk` et un JDK Temurin 17 installé dans `C:\Program Files\Eclipse Adoptium`.
 
+Au démarrage d'un émulateur arrêté, le lanceur active le clavier matériel, les raccourcis Android et le partage du presse-papiers. Cliquer dans un champ avant d'utiliser `Ctrl+A`, `Ctrl+C`, `Ctrl+V` ou `Ctrl+X`. Voir [le réglage du clavier et les limites du test](doc/CLAVIER_EMULATEUR.md).
+
 ## Fonctionnalités
 
-- Accueil avec recherche et filtre personnel.
-- CRUD des dégustations, notes de 1 à 5, couleur, millésime, région, ressenti et photo.
-- Profil modifiable, photo de profil, carnet personnel, écran À propos.
-- Interface adaptée aux téléphones et tablettes.
-- Suggestions de vins via SampleAPIs avec Ktor, chargées à la demande.
-- Variante `demo` : données persistantes sur l'appareil, sans compte.
-- Variante `cloud` : Supabase Auth, PostgreSQL, Storage, renouvellement de session et cache de lecture hors ligne.
+- Bibliothèque personnelle des vins bus, recherche par nom ou région.
+- Ajout, modification et suppression avec confirmation.
+- Formulaire : nom, millésime, couleur, région facultative, note et notes facultatives.
+- Profil avec seulement trois statistiques : vins bus, régions et note moyenne.
+- Connexion/inscription et gestion du compte en cloud ; démo locale disponible.
+- Écran À propos avec appel Ktor à SampleAPIs, à la demande.
+- Lecture du dernier carnet hors ligne et écrans adaptés téléphone/tablette.
+
+Pour comprendre le code : [architecture simplifiée](doc/ARCHITECTURE.md) et [préparation de l'oral](doc/ORAL.md).
 
 ## Configurer Supabase
 
-Sur ce PC, l'URL et la clé publique sont déjà renseignées et le schéma a été appliqué au projet `androidlagrappe` via le MCP Supabase. Double-cliquer sur **Lancer-Grappe-Cloud.cmd**, puis créer son compte depuis l'application. Les étapes ci-dessous permettent de configurer un autre projet.
+Les accès locaux ne sont pas inclus dans Git. Vérifier `local.properties` avant de lancer le mode cloud. Double-cliquer sur **Lancer-Grappe-Cloud.cmd**, puis créer son compte depuis l'application. Les étapes ci-dessous permettent de configurer un autre projet.
 
 1. Créer un projet dans la console Supabase et activer l'authentification e-mail/mot de passe.
 2. Exécuter [supabase/schema.sql](supabase/schema.sql) dans SQL Editor.
@@ -74,7 +80,7 @@ Les résultats et les limites des tests sont dans [doc/VERIFICATION.md](doc/VERI
 3. Relancer l'application et vérifier la persistance.
 4. Supprimer la dégustation après confirmation.
 5. Modifier le profil, ouvrir À propos, puis se déconnecter.
-6. Refaire le parcours sur tablette et tester le bouton Découvrir des vins.
+6. Refaire le parcours sur tablette et tester le bouton API dans À propos.
 7. Après configuration Supabase : inscription, confirmation e-mail, connexion, CRUD, deuxième compte sans droits d'écriture sur les avis du premier, consultation hors ligne et reconnexion.
 
-Les cinq tests unitaires vérifient les règles métier. La compilation seule ne valide pas le serveur Supabase.
+Les tests unitaires vérifient les règles métier et les statistiques. La compilation seule ne valide pas le serveur Supabase.
