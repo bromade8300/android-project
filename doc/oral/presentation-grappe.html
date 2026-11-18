@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#601d30">
+<title>Grappe · Oral de développement Android</title>
+<style>
+  :root {
+    color-scheme: light;
+    --wine: #601d30;
+    --cream: #f0ebe2;
+    --paper: #fbf8f2;
+    --ink: #39332e;
+    --muted: #665b51;
+    --line: #d4c9bb;
+    --serif: Georgia, serif;
+    font-family: system-ui, sans-serif;
+    color: var(--ink);
+    background: var(--cream);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100dvh; background: var(--paper); }
+  body:has(.cover:not([hidden])) { background: var(--wine); }
+  main, nav { width: 100%; }
+  .slide {
+    container-type: inline-size;
+    min-height: calc(100dvh - 60px);
+    padding: clamp(16px, 5dvh, 64px) max(5.5%, calc((100% - 1720px) / 2));
+    background: var(--paper);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  [hidden] { display: none !important; }
+  h1, h2, h3, p, figure { margin: 0; }
+  h1, h2, h3 { font: 400 4.7cqw/1.04 var(--serif); letter-spacing: -.045em; }
+  h1 { font-size: 13cqw; }
+  h3 { font-size: 2.8cqw; }
+  p, li { font-size: 2cqw; line-height: 1.4; }
+  code { font-size: .8em; overflow-wrap: anywhere; }
+  .eyebrow { font-size: 1.25cqw; font-weight: 750; letter-spacing: .15em; text-transform: uppercase; color: var(--wine); margin-bottom: 1.1em; }
+  .lede { max-width: 31ch; margin-top: .7em; }
+  .small { font-size: 1.6cqw; color: var(--muted); }
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 5cqw; align-items: center; }
+  .cover { background: var(--wine); color: var(--paper); border-color: var(--wine); }
+  .cover .eyebrow, .cover .small { color: #f4dce1; }
+  .cover .lede { font: 400 3.3cqw/1.2 var(--serif); margin-top: .35em; }
+  .mock-slide figure { justify-self: center; }
+  .phone { display: block; width: min(24cqw, calc((100dvh - 60px - 10dvh) * .45)); max-width: 100%; border: .38cqw solid var(--ink); border-radius: 1.65cqw; background: var(--cream); }
+  .points { list-style: none; padding: 0; margin: 1.1em 0 0; }
+  .points li { padding-left: 1.1em; position: relative; margin: .45em 0; }
+  .points li::before { content: '–'; position: absolute; left: 0; }
+  .points.small li { font-size: inherit; }
+  .flow, .branches { display: grid; gap: 2.8cqw; margin-top: 2.2cqw; }
+  .flow { grid-template-columns: repeat(3, 1fr); }
+  .branches { grid-template-columns: repeat(2, 1fr); }
+  .node { position: relative; border-top: .24cqw solid var(--wine); padding-top: .85cqw; }
+  .node h3 { font-size: 2.35cqw; margin-bottom: .35em; }
+  .flow .node + .node::before { content: '→'; position: absolute; left: -2.45cqw; top: .3cqw; color: var(--wine); font-size: 1.8cqw; }
+  .branch { background: var(--cream); padding: 1.15cqw 1.5cqw; }
+  .branch strong { color: var(--wine); }
+  .note { margin-top: 1.4cqw; }
+  .test-groups { grid-template-columns: repeat(2, 1fr); }
+  .test-groups .node { border-color: #a26d7c; }
+  .test-groups .node::before { display: none; }
+  nav { position: sticky; bottom: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px max(12px, 2vw); background: inherit; }
+  body:has(.cover:not([hidden])) output { color: var(--paper); }
+  nav div { display: flex; gap: 6px; }
+  button { font: inherit; font-size: .87rem; min-height: 44px; padding: 0 .9em; border: 1px solid var(--line); border-radius: 5px; background: var(--paper); color: var(--wine); cursor: pointer; }
+  button:hover:not(:disabled) { background: #e9dadc; }
+  button:focus-visible { outline: 2px solid var(--wine); outline-offset: 2px; }
+  button:disabled { opacity: .45; cursor: default; }
+  output { color: var(--muted); font-size: .85rem; font-variant-numeric: tabular-nums; }
+  :fullscreen { background: var(--cream); }
+  @media (max-width: 720px) and (orientation: portrait) {
+    .slide { padding: 7% 6%; }
+    .split { grid-template-columns: 1fr; }
+    h1 { font-size: 19cqw; }
+    h2 { font-size: 9.5cqw; }
+    h3 { font-size: 6cqw; }
+    .cover .lede { font-size: 7cqw; }
+    p, li { font-size: 4.6cqw; }
+    .small { font-size: 4cqw; }
+    .eyebrow { font-size: 3cqw; }
+    .phone { width: min(67cqw, 230px); border-radius: 4cqw; }
+    .flow { grid-template-columns: 1fr; }
+    .node h3 { font-size: 5.5cqw; }
+    .flow .node::before { display: none; }
+    .branches { margin-top: 5cqw; }
+    .note { margin-top: 4cqw; }
+  }
+  @page { size: 320mm 180mm; margin: 0; }
+  @media print {
+    body { display: block; }
+    main { width: 100%; }
+    nav { display: none; }
+    .slide, .slide[hidden] { display: flex !important; width: 320mm; height: 180mm; min-height: 0; padding: 12mm 18mm; break-after: page; print-color-adjust: exact; }
+    .phone { width: 62mm; }
+    .slide:last-child { break-after: auto; }
+  }
+</style>
+</head>
+<body>
+<main aria-label="Présentation de Grappe">
+  <section class="slide cover" aria-labelledby="s1">
+    <p class="eyebrow">Oral de développement Android</p>
+    <h1 id="s1">Grappe</h1>
+    <p class="lede">Carnet personnel de dégustation</p>
+    <ul class="points">
+      <li>Rechercher et gérer les vins dégustés</li>
+      <li>Conserver une note et un commentaire</li>
+      <li>Consulter les statistiques du carnet</li>
+    </ul>
+  </section>
+  <section class="slide mock-slide" aria-labelledby="s2" hidden>
+    <div class="split">
+      <div>
+        <p class="eyebrow">Maquette · Bibliothèque</p>
+        <h2 id="s2">Mes vins</h2>
+        <ul class="points">
+          <li>Recherche par nom ou région</li>
+          <li>Millésime, couleur et note sur chaque fiche</li>
+          <li>Modification et suppression avec confirmation</li>
+        </ul>
+      </div>
+      <figure><img class="phone" src="../maquettes-simplifiees/01-bibliotheque.svg" alt="Maquette de la bibliothèque Mes vins"></figure>
+    </div>
+  </section>
+  <section class="slide mock-slide" aria-labelledby="s3" hidden>
+    <div class="split">
+      <div>
+        <p class="eyebrow">Maquette · Formulaire</p>
+        <h2 id="s3">Ajouter un vin</h2>
+        <ul class="points">
+          <li>Nom, millésime, couleur et note sur 5</li>
+          <li>Région et commentaire facultatifs</li>
+          <li>Formulaire commun à l’ajout et à la modification</li>
+        </ul>
+      </div>
+      <figure><img class="phone" src="../maquettes-simplifiees/02-ajouter.svg" alt="Maquette du formulaire Ajouter un vin"></figure>
+    </div>
+  </section>
+  <section class="slide mock-slide" aria-labelledby="s4" hidden>
+    <div class="split">
+      <div>
+        <p class="eyebrow">Maquette · Compte</p>
+        <h2 id="s4">Mon profil</h2>
+        <ul class="points">
+          <li>Nombre de vins et de régions</li>
+          <li>Moyenne des notes</li>
+          <li>Modification du nom et de la photo</li>
+        </ul>
+      </div>
+      <figure><img class="phone" src="../maquettes-simplifiees/03-profil.svg" alt="Maquette du profil et de ses trois statistiques"></figure>
+    </div>
+  </section>
+  <section class="slide" aria-labelledby="s5" hidden>
+    <p class="eyebrow">Architecture Android</p>
+    <h2 id="s5">Du formulaire au stockage</h2>
+    <p class="small note"><strong>Kotlin</strong> · langage de l’application</p>
+    <div class="flow">
+      <div class="node"><h3>Jetpack Compose</h3><p class="small">Interface du formulaire</p></div>
+      <div class="node"><h3>ViewModel</h3><p class="small">État de l’écran et validation</p></div>
+      <div class="node"><h3>Repository</h3><p class="small">Accès aux données du carnet</p></div>
+    </div>
+    <div class="branches">
+      <p class="branch small"><strong>Démo locale</strong> · Stockage sur le téléphone</p>
+      <p class="branch small"><strong>Cloud</strong> · Supabase pour le compte et les vins</p>
+    </div>
+  </section>
+  <section class="slide cover" aria-labelledby="s6" hidden>
+    <h2 id="s6">Tests unitaires</h2>
+    <p class="note">Un cas précis pour vérifier une règle du code.</p>
+    <div class="flow test-groups">
+      <div class="node">
+        <h3>5 · Validation</h3>
+        <ul class="points small">
+          <li>Fiche valide acceptée</li>
+          <li>Champs invalides refusés</li>
+        </ul>
+      </div>
+      <div class="node">
+        <h3>2 · Statistiques</h3>
+        <ul class="points small">
+          <li>Carnet vide sans moyenne</li>
+          <li>Régions regroupées, autres comptes exclus</li>
+        </ul>
+      </div>
+    </div>
+    <p class="small note"><strong>7/7 réussis</strong> par variante (démo et cloud).</p>
+  </section>
+</main>
+<nav aria-label="Navigation des diapositives">
+  <div>
+    <button id="prev" type="button" aria-label="Diapositive précédente">←</button>
+    <button id="next" type="button" aria-label="Diapositive suivante">→</button>
+  </div>
+  <output id="position" aria-live="polite"></output>
+  <button id="fullscreen" type="button">Plein écran</button>
+</nav>
+<script>
+  const slides = [...document.querySelectorAll('.slide')];
+  const previous = document.querySelector('#prev');
+  const next = document.querySelector('#next');
+  const position = document.querySelector('#position');
+  const fullscreen = document.querySelector('#fullscreen');
+  let current = 0;
+
+  function show(index) {
+    current = Math.max(0, Math.min(index, slides.length - 1));
+    slides.forEach((slide, number) => { slide.hidden = number !== current; });
+    position.value = `${current + 1} / ${slides.length}`;
+    previous.disabled = current === 0;
+    next.disabled = current === slides.length - 1;
+    window.scrollTo(0, 0);
+  }
+
+  previous.addEventListener('click', () => show(current - 1));
+  next.addEventListener('click', () => show(current + 1));
+  document.addEventListener('keydown', (event) => {
+    const destinations = { ArrowLeft: current - 1, ArrowRight: current + 1, Home: 0, End: slides.length - 1 };
+    if (event.key in destinations && !event.altKey && !event.ctrlKey && !event.metaKey) {
+      event.preventDefault();
+      show(destinations[event.key]);
+    }
+  });
+  fullscreen.hidden = !document.fullscreenEnabled;
+  fullscreen.addEventListener('click', async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else await document.documentElement.requestFullscreen();
+    } catch {
+      fullscreen.textContent = 'Plein écran indisponible';
+    }
+  });
+  document.addEventListener('fullscreenchange', () => {
+    fullscreen.textContent = document.fullscreenElement ? 'Quitter le plein écran' : 'Plein écran';
+  });
+  show(0);
+</script>
+</body>
+</html>
