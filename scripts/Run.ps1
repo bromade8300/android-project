@@ -17,6 +17,7 @@ $adb = Join-Path $SdkDirectory 'platform-tools\adb.exe'
 $emulator = Join-Path $SdkDirectory 'emulator\emulator.exe'
 & $adb start-server
 if ((& $adb devices) -notmatch "$serial\s+device") {
+    & "$PSScriptRoot\Configure-EmulatorInput.ps1" -DeviceName $deviceName
     Start-Process -FilePath $emulator -ArgumentList @('-avd', $deviceName, '-port', $port, '-gpu', 'auto', '-memory', '1536', '-cores', '2', '-no-snapshot-load') -WindowStyle Hidden
 }
 $deadline = (Get-Date).AddMinutes(4)
@@ -25,6 +26,9 @@ do {
     $booted = & $adb -s $serial shell getprop sys.boot_completed 2>$null
     if ((Get-Date) -gt $deadline) { throw "L'émulateur ne répond pas. Ouvre Android Studio > Device Manager." }
 } until ($booted -match '1')
+# Le clavier du PC suffit ; éviter le tutoriel de stylet et le clavier tactile superposé.
+& $adb -s $serial shell settings put secure stylus_handwriting_enabled 0
+& $adb -s $serial shell settings put secure show_ime_with_hard_keyboard 0
 $apk = Join-Path $ProjectDirectory "app\build\outputs\apk\$Mode\debug\app-$Mode-debug.apk"
 & $adb -s $serial install -r $apk
 if ($LASTEXITCODE -ne 0) { throw "Installation de l'APK impossible." }
