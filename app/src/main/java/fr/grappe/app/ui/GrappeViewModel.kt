@@ -73,10 +73,10 @@ class GrappeViewModel(application: Application) : AndroidViewModel(application) 
 
     private suspend fun loadTastings(user: UserProfile) {
         // Le cache permet la lecture hors ligne ; les écritures cloud exigent le réseau.
-        val cached = cache.load(user.id)
+        val cached = cache.load(user.id).filter { it.ownerId == user.id }
         _state.update { it.copy(tastings = cached) }
         try {
-            val tastings = repository.load(user.id)
+            val tastings = repository.load(user.id).filter { it.ownerId == user.id }
             if (BuildConfig.CLOUD_ENABLED) cache.replace(user.id, tastings)
             _state.update { it.copy(tastings = tastings, offline = false) }
         } catch (error: Exception) {

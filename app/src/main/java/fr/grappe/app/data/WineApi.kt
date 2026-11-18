@@ -21,6 +21,6 @@ class WineApi {
         expectSuccess = true
     }
     suspend fun suggestions(): List<WineSuggestion> =
-        client.get("https://api.sampleapis.com/wines/reds").body<List<WineSuggestion>>().take(6)
+        client.get("https://api.sampleapis.com/wines/reds").body<List<WineSuggestion>>().take(1)
     fun close() { client.close() }
 }

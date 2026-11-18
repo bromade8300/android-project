@@ -36,6 +36,6 @@ class LocalTastingRepository(context: Context, private val seedDemo: Boolean = t
 
 private val demoTastings = listOf(
     Tasting(id = "demo-bordeaux", wine = "Château des Rives", notes = "Un beau dimanche en rouge.\nDes fruits noirs, une belle rondeur… et surtout une très belle compagnie.", createdAt = 3),
-    Tasting(id = "demo-loire", ownerId = "demo-camille", author = "Camille Laurent", wine = "Les Hauts de Loire", vintage = "2023", color = "Blanc", region = "Vouvray", rating = 5, notes = "De la fraîcheur, des fleurs blanches et le goût des retrouvailles.", createdAt = 2),
-    Tasting(id = "demo-provence", ownerId = "demo-antoine", author = "Antoine Morel", wine = "Domaine des Oliviers", vintage = "2024", color = "Rosé", region = "Provence", rating = 4, notes = "Une bouteille à partager quand le soleil s'invite à table.", createdAt = 1),
+    Tasting(id = "demo-loire", wine = "Les Hauts de Loire", vintage = "2023", color = "Blanc", region = "Vouvray", rating = 5, notes = "De la fraîcheur, des fleurs blanches et le goût des retrouvailles.", createdAt = 2),
+    Tasting(id = "demo-provence", wine = "Domaine des Oliviers", vintage = "2024", color = "Rosé", region = "Provence", rating = 4, notes = "Une bouteille à partager quand le soleil s'invite à table.", createdAt = 1),
 )

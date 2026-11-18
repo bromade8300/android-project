@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import fr.grappe.app.model.wineStats
 import fr.grappe.app.BuildConfig
 import fr.grappe.app.ui.GrappeUiState
 import fr.grappe.app.ui.components.*
@@ -37,17 +38,17 @@ fun ProfileScreen(state: GrappeUiState, onProfile: (String, String, () -> Unit) 
             photo = it.toString()
         }
     }
-    val mine = state.tastings.filter { it.ownerId == user.id }
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        BrandHeader("Les bons moments restent", "Mon carnet")
+    val stats = wineStats(state.tastings, user.id)
+    Column(Modifier.fillMaxSize().wrapContentWidth(Alignment.CenterHorizontally).widthIn(max = 600.dp).verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text("Mon profil", style = MaterialTheme.typography.headlineMedium)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             Avatar(user.name, Modifier.size(64.dp), user.photoUri)
             Column { Text(user.name, style = MaterialTheme.typography.titleLarge); Text(user.email, color = Muted) }
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-            ProfileStat("${mine.size}", "dégustations")
-            ProfileStat(mine.map { it.region }.filter { it.isNotBlank() }.distinct().size.toString(), "régions")
-            ProfileStat(if (mine.isEmpty()) "—" else String.format(java.util.Locale.FRANCE, "%.1f", mine.map { it.rating }.average()), "note moyenne")
+            ProfileStat("${stats.count}", "vins bus")
+            ProfileStat(stats.regions.toString(), "régions")
+            ProfileStat(stats.average?.let { String.format(java.util.Locale.FRANCE, "%.1f", it) } ?: "—", "note moyenne")
         }
         OutlinedButton({ edit = !edit }, Modifier.fillMaxWidth(), enabled = !state.busy) { Text("Modifier mon profil") }
         if (edit) {
@@ -57,19 +58,6 @@ fun ProfileScreen(state: GrappeUiState, onProfile: (String, String, () -> Unit) 
                 TextButton({ picker.launch(arrayOf("image/*")) }) { Text("Choisir une photo") }
             }
             PrimaryButton("Enregistrer mon profil", { onProfile(name, photo) { edit = false } }, Modifier.fillMaxWidth(), !state.busy)
-        }
-        HorizontalDivider()
-        Text("Mes dernières découvertes", style = MaterialTheme.typography.titleLarge)
-        if (mine.isEmpty()) Text("Votre carnet attend sa première bouteille.", color = Muted)
-        mine.take(3).forEach { tasting ->
-            Row(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                BottleArt(Modifier.width(60.dp).height(78.dp), tasting.color)
-                Column {
-                    Text(tasting.wine, style = MaterialTheme.typography.titleMedium)
-                    Text("${tasting.region} · ${tasting.vintage}", color = Muted)
-                    RatingStars(tasting.rating)
-                }
-            }
         }
         HorizontalDivider()
         Text("Mon compte", style = MaterialTheme.typography.titleLarge)
@@ -95,18 +83,20 @@ private fun ProfileStat(value: String, label: String) {
 }
 
 @Composable
-fun AboutScreen(onBack: () -> Unit) {
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
-        BrandHeader("Le goût du partage", "À propos de Grappe")
-        BottleArt(Modifier.fillMaxWidth().height(200.dp))
-        Text("Les belles découvertes se partagent.", style = MaterialTheme.typography.titleLarge, color = Burgundy)
-        Text("Grappe est un carnet de dégustation : gardez une trace des vins, de leurs arômes et des moments qui les accompagnent.")
+fun AboutScreen(state: GrappeUiState, onDiscover: () -> Unit, onBack: () -> Unit) {
+    Column(Modifier.fillMaxSize().wrapContentWidth(Alignment.CenterHorizontally).widthIn(max = 600.dp).verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+        Text("À propos de Grappe", style = MaterialTheme.typography.headlineMedium)
+        Text("Grappe est une bibliothèque personnelle des vins bus : un nom, un millésime, une couleur et une note.")
         Text("Vos données", style = MaterialTheme.typography.titleLarge)
         Text(if (BuildConfig.CLOUD_ENABLED)
-            "Le compte est géré par Supabase Auth. Les dégustations sont partagées entre les utilisateurs connectés. Seul l'auteur peut les modifier ou les supprimer. Les photos déposées dans le cloud sont publiques. Les dernières dégustations restent consultables hors ligne sur cet appareil."
+            "Le compte est géré par Supabase Auth. La bibliothèque affiche uniquement vos vins. Seul l'auteur peut les modifier ou les supprimer. Les photos déposées dans le cloud sont publiques. Les dernières dégustations restent consultables hors ligne sur cet appareil."
             else "Cette version de démonstration conserve les dégustations et le profil sur cet appareil. Elle ne crée aucun compte en ligne.")
         Text("Catalogue de découverte", style = MaterialTheme.typography.titleLarge)
         Text("Les suggestions de vins proviennent de SampleAPIs. Elles sont chargées uniquement lorsque vous les demandez.")
+        OutlinedButton(onDiscover, enabled = !state.busy) { Text("Charger un exemple de vin (API)") }
+        state.suggestions.forEach { wine ->
+            Text("${wine.wine} · ${wine.winery}", style = MaterialTheme.typography.bodyMedium)
+        }
         Text("Projet pédagogique · version ${BuildConfig.VERSION_NAME}", color = Muted)
         Text("L'abus d'alcool est dangereux pour la santé. À consommer avec modération.", style = MaterialTheme.typography.bodySmall, color = Muted)
         PrimaryButton("Revenir à mon carnet", onBack)

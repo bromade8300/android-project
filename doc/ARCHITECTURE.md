@@ -1,59 +1,64 @@
 # Architecture de Grappe
 
-Grappe est une application Android native en Kotlin et Jetpack Compose. Le code suit trois responsabilités : afficher, coordonner, stocker. Un seul module Gradle suffit pour ce projet pédagogique.
+Grappe est une bibliothèque des vins bus, en Kotlin et Jetpack Compose. Un seul module Android, un modèle métier, un ViewModel et deux implémentations du stockage.
+
+## Parcours
+
+- **Mes vins** : liste personnelle, recherche par nom ou région, actualisation, modification et suppression confirmée.
+- **Ajouter** : nom, millésime, couleur, région facultative, note de 1 à 5 et notes facultatives.
+- **Profil** : nombre de vins, nombre de régions et note moyenne ; modification du nom et de la photo, mot de passe en cloud, déconnexion.
+- **À propos**, accessible depuis le profil : description et bouton d'appel à l'API externe SampleAPIs avec Ktor.
+- **Authentification** : connexion/inscription en cloud ; entrée explicite en démo locale.
+
+Le fil partagé, les auteurs sur chaque carte, les illustrations décoratives, les photos de vins et les dernières découvertes du profil ont été retirés de l'interface. Les anciens champs `author` et `photoUri` restent dans le modèle pour lire les données existantes et conserver le schéma cloud.
+
+## Chemin d'une action
 
 ```mermaid
 flowchart TD
-    Activity[MainActivity : point d'entrée Android] --> App[GrappeApp : navigation]
-    App --> Screens[Écrans Compose : affichage et saisie]
+    Activity[MainActivity] --> App[GrappeApp : navigation]
+    App --> Screens[Écrans Compose]
     Screens --> VM[GrappeViewModel : état et actions]
-    VM --> Contract[TastingRepository : contrat du CRUD]
-    Contract --> Local[LocalTastingRepository : démo et cache]
-    Contract --> Remote[SupabaseTastingRepository : données cloud]
-    VM --> Auth[SupabaseService : session et compte]
-    VM --> API[WineApi : suggestions externes]
-    Remote --> Ktor[Ktor HTTP]
-    Auth --> Ktor
-    Ktor --> Supabase[Supabase Auth / PostgreSQL RLS / Storage]
-    API --> SampleAPIs[SampleAPIs : catalogue de vins]
+    VM --> Repo[TastingRepository : load / save / delete]
+    Repo --> Local[LocalTastingRepository : démo et cache JSON]
+    Repo --> Cloud[SupabaseTastingRepository : HTTP Ktor]
+    Cloud --> DB[Supabase : table tastings]
+    VM --> Auth[SupabaseService : compte et session]
+    VM --> API[WineApi : SampleAPIs]
+    Screens --> Stats[WineStats : trois calculs purs]
 ```
 
-## Lire le code dans cet ordre
+## Ajouter ou modifier un vin
 
-1. `model/Tasting.kt` : données métier et règles de validation.
-2. `data/TastingRepository.kt` : les trois méthodes qui représentent lecture, création/modification et suppression.
-3. `data/LocalTastingRepository.kt` : implémentation locale, facile à suivre.
-4. `ui/GrappeViewModel.kt` : un clic devient une action ; l'action modifie l'état observable.
-5. `ui/screens/EditorScreen.kt` : exemple d'écran qui reçoit des données et renvoie une intention.
-6. `data/SupabaseTastingRepository.kt` puis `SupabaseService.kt` : requêtes HTTP et gestion de session.
+1. `EditorScreen` conserve les champs avec `rememberSaveable` et construit une copie de `Tasting`.
+2. `GrappeViewModel.save` contrôle le propriétaire et `validationError()`.
+3. Le dépôt écrit le vin. En modification, `copy` conserve son identifiant.
+4. Le ViewModel recharge la liste et actualise le `StateFlow`.
+5. Compose observe l'état et redessine l'écran.
 
-## Exemple : ajouter une dégustation
+`GrappeApp` gère quatre destinations dans un enum. Le formulaire est commun à l'ajout et à la modification. Le brouillon sérialisé survit à une rotation.
 
-L'utilisateur remplit `EditorScreen`. Le bouton produit un objet `Tasting`. `GrappeViewModel.save` vérifie l'auteur et les champs, téléverse la photo si nécessaire, puis appelle `repository.save`. Le dépôt stocke l'objet. Le ViewModel recharge la liste et l'interface se recompose automatiquement grâce à `StateFlow`.
+## Stockage et statistiques
 
-Une modification suit le même chemin en conservant l'identifiant de la dégustation. Une suppression demande une confirmation dans l'écran, puis appelle `repository.delete`.
+La variante `demo` utilise les préférences Android avec une liste sérialisée en JSON. `cloud` utilise Supabase et conserve la dernière liste dans ce même stockage pour la lecture hors ligne. Les écritures cloud nécessitent le réseau.
 
-## Choix expliqués
+La requête cloud filtre `owner_id`. Le ViewModel filtre aussi les données et l'ancien cache par propriétaire. `wineStats` calcule le nombre de vins, les régions distinctes après normalisation et la moyenne des notes. Un carnet vide affiche « — » pour la moyenne.
 
-- **Compose** : une fonction par écran, composants visuels réutilisés dans `ui/components`.
-- **MVVM léger** : les écrans ne font aucune requête réseau et ne connaissent pas SQL.
-- **Injection explicite** : le ViewModel choisit le dépôt selon la variante ; pas de framework d'injection à expliquer.
-- **DTO** : `TastingRow` traduit les noms SQL en modèle Kotlin.
-- **Ktor** : client HTTP commun aux requêtes Supabase et à l'API externe. Les routes REST restent visibles pour comprendre les échanges.
-- **Deux variantes** : `demo` fonctionne localement ; `cloud` utilise Supabase. La démo n'est pas une authentification simulée.
-- **Navigation simple** : quatre destinations dans un enum ; aucune pile complexe pour quatre écrans.
-- **Responsive** : les formulaires et l'accueil passent en deux colonnes sur tablette.
+Les règles RLS existantes interdisent la modification/suppression des vins d'un autre compte. Attention : la politique SELECT historique autorise encore la lecture entre comptes connectés. Le filtre client donne une bibliothèque personnelle, pas une garantie de confidentialité serveur. Aucune migration distante n'est appliquée par cette simplification. Les photos de profil cloud restent publiques.
 
-## Session, sécurité et hors ligne
+## Ce qui reste pour le cours
 
-Supabase signe les jetons. Le jeton d'accès et le jeton de renouvellement sont chiffrés dans le Keystore Android. Le client renouvelle la session avant expiration. Le mot de passe n'est jamais stocké.
+Connexion/inscription, gestion du profil et du mot de passe, CRUD cloud, lecture hors ligne, API externe Ktor, écran À propos et mise en page adaptée téléphone/tablette restent présents.
 
-La clé publique Supabase identifie le projet ; elle n'accorde pas les droits administrateur. Les politiques RLS PostgreSQL autorisent la lecture aux utilisateurs connectés et limitent chaque écriture à son auteur. Les contrôles de l'interface améliorent l'expérience, les politiques SQL assurent l'autorisation réelle.
+Les intégrations Firebase Analytics, Crashlytics et App Distribution n'étaient pas présentes et ne sont pas ajoutées. Supabase remplace Auth/Firestore ; l'acceptation de cette alternative reste à confirmer avec l'enseignant. Cette version ne prétend pas satisfaire les exigences Firebase manquantes.
 
-Le cache local conserve la dernière liste consultée pour l'utilisateur. Sans réseau, celle-ci reste lisible. Les créations, modifications et suppressions cloud exigent une connexion : il n'y a pas de file de synchronisation différée. Les photos cloud sont publiques ; les documents choisis en démo restent locaux.
+## Ordre de lecture conseillé
 
-## Limites à présenter honnêtement
+1. `model/Tasting.kt` : données et validation.
+2. `model/WineStats.kt` : statistiques faciles à expliquer.
+3. `data/TastingRepository.kt`, puis `LocalTastingRepository.kt` : contrat et stockage.
+4. `ui/GrappeViewModel.kt` : actions et état.
+5. `ui/screens/EditorScreen.kt`, puis `HomeScreen.kt` : saisie et liste.
+6. `data/SupabaseTastingRepository.kt`, `SupabaseService.kt`, `WineApi.kt` : réseau.
 
-Le projet Supabase doit être configuré avant de tester la variante cloud. Les données cloud et les règles RLS doivent être vérifiées avec deux comptes réels. Les anciennes photos remplacées ou supprimées ne sont pas nettoyées automatiquement dans Storage. Le fil ne propose pas encore d'abonnements, de likes ou de commentaires.
-
-Le sujet d'origine exige Firebase Auth, Firestore, Analytics, Crashlytics et App Distribution. Supabase a été choisi à la demande d'Antoine. Ces services Firebase ne sont pas intégrés et leur remplacement doit être accepté par l'enseignant.
+Voir [ORAL.md](ORAL.md) pour le fil de présentation et les questions de code.

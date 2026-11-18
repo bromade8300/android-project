@@ -31,6 +31,7 @@ class SupabaseTastingRepository(private val service: SupabaseService) : TastingR
         val response = service.client.get(service.endpoint("/rest/v1/tastings")) {
             with(service) { headers(token) }
             parameter("select", "*"); parameter("order", "created_at.desc")
+            parameter("owner_id", "eq.$ownerId")
         }
         service.ensureSuccess(response.status)
         return response.body<List<TastingRow>>().map { it.toModel() }

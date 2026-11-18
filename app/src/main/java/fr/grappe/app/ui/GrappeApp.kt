@@ -44,9 +44,9 @@ fun GrappeApp(viewModel: GrappeViewModel) {
         Scaffold(containerColor = Cream, snackbarHost = { SnackbarHost(snackbar) }, bottomBar = {
             if (state.user != null) NavigationBar(containerColor = Paper, tonalElevation = 0.dp) {
                 NavigationBarItem(destination == Destination.Home, { if (!state.busy) destination = Destination.Home },
-                    icon = { Icon(Icons.Outlined.Home, null) }, label = { Text("Accueil") })
+                    icon = { Icon(Icons.Outlined.Home, null) }, label = { Text("Mes vins") })
                 NavigationBarItem(destination == Destination.Editor, { if (!state.busy) openEditor() },
-                    icon = { Icon(Icons.Outlined.AddCircle, null) }, label = { Text("Publier") })
+                    icon = { Icon(Icons.Outlined.AddCircle, null) }, label = { Text("Ajouter") })
                 NavigationBarItem(destination == Destination.Profile || destination == Destination.About, { if (!state.busy) destination = Destination.Profile },
                     icon = { Icon(Icons.Outlined.PersonOutline, null) }, label = { Text("Profil") })
             }
@@ -55,7 +55,7 @@ fun GrappeApp(viewModel: GrappeViewModel) {
                 if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
                 if (state.user == null) AuthScreen(state.busy, viewModel::enterDemo, viewModel::authenticate)
                 else when (destination) {
-                    Destination.Home -> HomeScreen(state, { openEditor() }, { openEditor(it) }, viewModel::delete, viewModel::refresh, viewModel::discoverWines)
+                    Destination.Home -> HomeScreen(state, { openEditor(it) }, viewModel::delete, viewModel::refresh)
                     Destination.Editor -> {
                         val initial = remember(draftJson) { kotlinx.serialization.json.Json.decodeFromString(Tasting.serializer(), draftJson) }
                         EditorScreen(initial, editing, state.busy,
@@ -63,7 +63,7 @@ fun GrappeApp(viewModel: GrappeViewModel) {
                     }
                     Destination.Profile -> ProfileScreen(state, viewModel::updateProfile, viewModel::changePassword,
                         { destination = Destination.About }, viewModel::signOut)
-                    Destination.About -> AboutScreen { destination = Destination.Profile }
+                    Destination.About -> AboutScreen(state, viewModel::discoverWines) { destination = Destination.Profile }
                 }
             }
         }

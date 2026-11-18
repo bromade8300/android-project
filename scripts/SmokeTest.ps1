@@ -2,7 +2,7 @@
 . "$PSScriptRoot\Environment.ps1"
 $adb = Join-Path $SdkDirectory 'platform-tools\adb.exe'
 $serial = 'emulator-5554'
-$testName = 'Verification_' + (Get-Date -Format 'HHmmss')
+$testName = 'Test_' + (Get-Date -Format 'HHmmss')
 
 function Read-Ui {
     for ($attempt = 0; $attempt -lt 5; $attempt++) {
@@ -21,7 +21,7 @@ function Tap-Node($node) {
     $x = [int](($coordinates[0] + $coordinates[2]) / 2)
     $y = [int](($coordinates[1] + $coordinates[3]) / 2)
     & $adb -s $serial shell input tap $x $y
-    Start-Sleep -Milliseconds 900
+    Start-Sleep -Milliseconds 1500
 }
 
 function Tap-Text([string]$text) {
@@ -36,6 +36,14 @@ function Read-Tastings {
     $stored.SelectSingleNode('/map/string[@name="demo"]').InnerText | ConvertFrom-Json
 }
 
+function Input-Text([string]$text) {
+    # L'émulateur lent peut perdre des caractères envoyés en une seule rafale.
+    foreach ($character in $text.ToCharArray()) {
+        & $adb -s $serial shell input text "$character"
+        Start-Sleep -Milliseconds 150
+    }
+}
+
 function Save-Editor([string]$label) {
     # Faire défiler le formulaire sans envoyer de retour Android, qui quitterait l'écran.
     for ($attempt = 0; $attempt -lt 6; $attempt++) {
@@ -48,11 +56,11 @@ function Save-Editor([string]$label) {
     throw "Bouton absent : $label"
 }
 
-Tap-Text 'Publier'
+Tap-Text 'Ajouter'
 $tree = Read-Ui
 Tap-Node ($tree.SelectNodes('//node[@class="android.widget.EditText"]') | Select-Object -First 1)
-& $adb -s $serial shell input text $testName
-Save-Editor 'Partager ma dégustation'
+Input-Text $testName
+Save-Editor 'Enregistrer'
 $created = Read-Tastings | Where-Object wine -eq $testName
 if (-not $created) { throw 'Création non persistée.' }
 Write-Output 'CREATE : OK'
@@ -62,8 +70,8 @@ Tap-Node ($tree.SelectNodes('//node') | Where-Object { $_.'content-desc' -eq "Mo
 $tree = Read-Ui
 Tap-Node ($tree.SelectNodes('//node[@class="android.widget.EditText"]') | Select-Object -First 1)
 & $adb -s $serial shell input keyevent 123
-& $adb -s $serial shell input text '_modifie'
-Save-Editor 'Enregistrer les modifications'
+Input-Text '_modifie'
+Save-Editor 'Enregistrer'
 $updated = Read-Tastings | Where-Object wine -eq "${testName}_modifie"
 if ($updated.id -ne $created.id) { throw 'Modification non persistée avec le même identifiant.' }
 Write-Output 'UPDATE : OK'
@@ -71,7 +79,11 @@ Write-Output 'UPDATE : OK'
 & $adb -s $serial shell am force-stop fr.grappe.app.demo
 & $adb -s $serial shell am start -n fr.grappe.app.demo/fr.grappe.app.MainActivity | Out-Null
 Start-Sleep -Seconds 2
-$tree = Read-Ui
+for ($attempt = 0; $attempt -lt 10; $attempt++) {
+    $tree = Read-Ui
+    if ($tree.SelectNodes('//node') | Where-Object text -eq "${testName}_modifie") { break }
+    Start-Sleep -Seconds 1
+}
 if (-not ($tree.SelectNodes('//node') | Where-Object text -eq "${testName}_modifie")) { throw 'La donnée ne survit pas au redémarrage.' }
 Write-Output 'PERSISTENCE : OK'
 
