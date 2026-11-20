@@ -60,6 +60,16 @@
   .flow .node + .node::before { content: '→'; position: absolute; left: -2.45cqw; top: .3cqw; color: var(--wine); font-size: 1.8cqw; }
   .branch { background: var(--cream); padding: 1.15cqw 1.5cqw; }
   .branch strong { color: var(--wine); }
+  .architecture-stores { position: relative; margin-top: 3.6cqw; }
+  .architecture-stores::before { content: ''; position: absolute; left: calc((100% - 2.8cqw) / 4); right: calc((100% - 2.8cqw) / 4); top: -1.8cqw; border-top: 1px solid var(--wine); }
+  .architecture-stores .branch { position: relative; }
+  .architecture-stores .branch::before { content: ''; position: absolute; left: 50%; top: -1.8cqw; height: 1.8cqw; border-left: 1px solid var(--wine); }
+  .architecture-link { position: absolute; left: 50%; right: calc((100% - 5.6cqw) / 6); top: -1.8cqw; height: 1.8cqw; border-bottom: 1px solid var(--wine); border-right: 1px solid var(--wine); transform: translateY(-100%); }
+  .architecture .flow, .steps { padding: 0; list-style: none; }
+  .agenda { padding-left: 1.5em; margin: 2.2cqw 0 0; }
+  .agenda li + li { margin-top: .65em; }
+  .team .node::before { display: none; }
+  .team .small { margin-top: .3em; }
   .note { margin-top: 1.4cqw; }
   .test-groups { grid-template-columns: repeat(2, 1fr); }
   .test-groups .node { border-color: #a26d7c; }
@@ -88,6 +98,8 @@
     .node h3 { font-size: 5.5cqw; }
     .flow .node::before { display: none; }
     .branches { margin-top: 5cqw; }
+    .architecture-stores { margin-top: 5cqw; }
+    .architecture-stores::before, .architecture-stores .branch::before, .architecture-link { display: none; }
     .note { margin-top: 4cqw; }
   }
   @page { size: 320mm 180mm; margin: 0; }
@@ -112,6 +124,43 @@
       <li>Conserver une note et un commentaire</li>
       <li>Consulter les statistiques du carnet</li>
     </ul>
+  </section>
+  <section class="slide" aria-labelledby="equipe" hidden>
+    <h2 id="equipe">L’équipe</h2>
+    <div class="flow team">
+      <div class="node">
+        <h3>Théo</h3>
+        <p><strong>UI designer</strong></p>
+        <p class="small">Maquettes et cohérence visuelle des écrans</p>
+      </div>
+      <div class="node">
+        <h3>Antoine</h3>
+        <p><strong>Product Owner</strong></p>
+        <p class="small">Besoins des utilisateurs et priorités du carnet</p>
+      </div>
+      <div class="node">
+        <h3>Louis</h3>
+        <p><strong>Développeur Android</strong></p>
+        <p class="small">Implémentation, stockage et tests</p>
+      </div>
+    </div>
+  </section>
+  <section class="slide" aria-labelledby="sommaire" hidden>
+    <h2 id="sommaire">Sommaire</h2>
+    <ol class="agenda">
+      <li>Les maquettes et le parcours utilisateur</li>
+      <li>L’architecture et le stockage des données</li>
+      <li>Les tests du carnet et la démo</li>
+    </ol>
+  </section>
+  <section class="slide" aria-labelledby="besoin" hidden>
+    <h2 id="besoin">Besoin et priorités</h2>
+    <p class="note">Se souvenir des vins qu’on a goûtés, même quand on a oublié leur nom.</p>
+    <ol class="agenda">
+      <li><strong>Saisir rapidement</strong> une dégustation avec quelques champs et une note sur 5.</li>
+      <li><strong>Retrouver facilement</strong> un vin par son nom ou sa région.</li>
+      <li><strong>Tenir son carnet à jour</strong> en corrigeant ses fiches et en consultant ses statistiques.</li>
+    </ol>
   </section>
   <section class="slide mock-slide" aria-labelledby="s2" hidden>
     <div class="split">
@@ -155,21 +204,34 @@
       <figure><img class="phone" src="../maquettes-simplifiees/03-profil.svg" alt="Maquette du profil et de ses trois statistiques"></figure>
     </div>
   </section>
-  <section class="slide" aria-labelledby="s5" hidden>
-    <p class="eyebrow">Architecture Android</p>
-    <h2 id="s5">Du formulaire au stockage</h2>
-    <p class="small note"><strong>Kotlin</strong> · langage de l’application</p>
-    <div class="flow">
-      <div class="node"><h3>Jetpack Compose</h3><p class="small">Interface du formulaire</p></div>
-      <div class="node"><h3>ViewModel</h3><p class="small">État de l’écran et validation</p></div>
-      <div class="node"><h3>Repository</h3><p class="small">Accès aux données du carnet</p></div>
+  <section class="slide" aria-labelledby="architecture" hidden>
+    <h2 id="architecture">Architecture de l’application</h2>
+    <p class="small note">Application Android en Kotlin</p>
+    <div class="architecture">
+      <ol class="flow">
+        <li class="node"><h3>Jetpack Compose</h3><p class="small">Écrans et interactions</p></li>
+        <li class="node"><h3>ViewModel</h3><p class="small">État et règles du carnet</p></li>
+        <li class="node"><h3>Repository</h3><p class="small">Accès aux données</p></li>
+      </ol>
+      <div class="branches architecture-stores" aria-label="Stockages disponibles via le Repository">
+        <span class="architecture-link" aria-hidden="true"></span>
+        <p class="branch small"><strong>Démo locale</strong><br>Fiches enregistrées en JSON sur le téléphone</p>
+        <p class="branch small"><strong>Cloud · Supabase</strong><br>Fiches sur le serveur et copie locale pour la lecture hors ligne</p>
+      </div>
     </div>
-    <div class="branches">
-      <p class="branch small"><strong>Démo locale</strong> · Stockage sur le téléphone</p>
-      <p class="branch small"><strong>Cloud</strong> · Supabase pour le compte et les vins</p>
-    </div>
+    <p class="small note">En mode cloud, le ViewModel passe aussi par Supabase Auth pour le compte et la session.</p>
   </section>
-  <section class="slide cover" aria-labelledby="s6" hidden>
+  <section class="slide" aria-labelledby="s5" hidden>
+    <p class="eyebrow">Parcours d’enregistrement</p>
+    <h2 id="s5">Du formulaire au stockage</h2>
+    <p class="note">Un vin rouge de 2021, noté 4 sur 5.</p>
+    <ol class="flow steps">
+      <li class="node"><h3>Saisir</h3><p class="small">L’utilisateur remplit la fiche et appuie sur Enregistrer.</p></li>
+      <li class="node"><h3>Vérifier et sauvegarder</h3><p class="small">L’application contrôle le nom, le millésime et la note avant de sauvegarder la fiche.</p></li>
+      <li class="node"><h3>Retrouver la fiche</h3><p class="small">Le vin apparaît dans « Mes vins ».</p></li>
+    </ol>
+  </section>
+  <section class="slide" aria-labelledby="s6" hidden>
     <h2 id="s6">Tests unitaires</h2>
     <p class="note">Un cas précis pour vérifier une règle du code.</p>
     <div class="flow test-groups">
@@ -189,6 +251,16 @@
       </div>
     </div>
     <p class="small note"><strong>7/7 réussis</strong> par variante (démo et cloud).</p>
+  </section>
+  <section class="slide cover" aria-labelledby="demo" hidden>
+    <h2 id="demo">Démo</h2>
+    <p class="lede">De la dégustation au carnet</p>
+    <ol class="agenda">
+      <li>Ajouter un rouge de 2021, noté 4 sur 5.</li>
+      <li>Le retrouver par région dans « Mes vins ».</li>
+      <li>Modifier sa note et consulter les statistiques du profil.</li>
+    </ol>
+    <p class="small note">Mode démo · données conservées sur l’appareil</p>
   </section>
 </main>
 <nav aria-label="Navigation des diapositives">
