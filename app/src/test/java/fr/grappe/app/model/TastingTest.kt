@@ -3,10 +3,13 @@ package fr.grappe.app.model
 import org.junit.Assert.*
 import org.junit.Test
 
+// JUnit exécute chaque fonction @Test séparément. Les noms entre accents graves peuvent contenir des espaces.
 class TastingTest {
+    // La fiche de référence est valide. copy ne change que le champ ciblé par chaque test.
     private val valid = Tasting(wine = "Château des Rives")
 
     @Test fun `une degustation valide peut etre enregistree`() {
+        // assertNull attend l’absence de message. assertNotNull attend une erreur de validation.
         assertNull(valid.validationError())
     }
 
@@ -15,6 +18,7 @@ class TastingTest {
     }
 
     @Test fun `les millesimes hors limites et non numeriques sont refuses`() {
+        // On teste les valeurs non numériques et hors limites, puis les deux bornes inclusives.
         listOf("", "abcd", "1899", "2101").forEach {
             assertNotNull("millésime $it", valid.copy(vintage = it).validationError())
         }

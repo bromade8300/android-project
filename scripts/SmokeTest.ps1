@@ -4,6 +4,7 @@ $adb = Join-Path $SdkDirectory 'platform-tools\adb.exe'
 $serial = 'emulator-5554'
 $testName = 'Test_' + (Get-Date -Format 'HHmmss')
 
+# adb recupere l'arbre de l'ecran. Le script utilise les nuds XML pour reperer les champs et les boutons.
 function Read-Ui {
     for ($attempt = 0; $attempt -lt 5; $attempt++) {
         $result = & $adb -s $serial shell uiautomator dump /sdcard/grappe-test.xml 2>&1
@@ -31,6 +32,7 @@ function Tap-Text([string]$text) {
     Tap-Node $node
 }
 
+# Lit le stockage de la demo pour verifier l'ecriture des donnees en plus des interactions a l'ecran.
 function Read-Tastings {
     [xml]$stored = & $adb -s $serial shell run-as fr.grappe.app.demo cat shared_prefs/tastings.xml
     $stored.SelectSingleNode('/map/string[@name="demo"]').InnerText | ConvertFrom-Json
@@ -56,6 +58,7 @@ function Save-Editor([string]$label) {
     throw "Bouton absent : $label"
 }
 
+# Cree une fiche identifiable par son nom de test. L'etape suivante verifie que la modification conserve son identifiant.
 Tap-Text 'Ajouter'
 $tree = Read-Ui
 Tap-Node ($tree.SelectNodes('//node[@class="android.widget.EditText"]') | Select-Object -First 1)
@@ -76,6 +79,7 @@ $updated = Read-Tastings | Where-Object wine -eq "${testName}_modifie"
 if ($updated.id -ne $created.id) { throw 'Modification non persistée avec le même identifiant.' }
 Write-Output 'UPDATE : OK'
 
+# Redemarre l'application pour verifier que la fiche modifiee est toujours disponible.
 & $adb -s $serial shell am force-stop fr.grappe.app.demo
 & $adb -s $serial shell am start -n fr.grappe.app.demo/fr.grappe.app.MainActivity | Out-Null
 Start-Sleep -Seconds 2

@@ -1,5 +1,6 @@
 import java.util.Properties
 
+// Le module active les outils pour compiler Android et Kotlin, générer Compose et sérialiser les modèles.
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -11,12 +12,14 @@ plugins {
 val localConfig = Properties().apply {
     rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
 }
+// Échappe les caractères spéciaux pour produire un littéral String valide dans BuildConfig.
 fun configString(name: String) = "\"${localConfig.getProperty(name, "").replace("\\", "\\\\").replace("\"", "\\\"")}\""
 
 android {
     namespace = "fr.grappe.app"
     compileSdk = 35
 
+    // Déclare les paramètres communs aux deux variantes, dont la version et le niveau Android minimal.
     defaultConfig {
         applicationId = "fr.grappe.app"
         minSdk = 26
@@ -28,6 +31,7 @@ android {
         buildConfigField("String", "SUPABASE_KEY", configString("supabase.key"))
     }
     flavorDimensions += "service"
+    // Les variantes choisissent le stockage via CLOUD_ENABLED. Le suffixe permet d’installer la démo à côté de la version cloud.
     productFlavors {
         create("demo") {
             dimension = "service"
@@ -48,6 +52,7 @@ android {
     packaging { resources.excludes += "/META-INF/{AL2.0,LGPL2.1}" }
 }
 
+// Compose construit les écrans, Lifecycle fournit le ViewModel, Coil charge les images, Ktor effectue les requêtes et JUnit exécute les tests.
 dependencies {
     implementation(platform("androidx.compose:compose-bom:2025.04.01"))
     implementation("androidx.activity:activity-compose:1.10.1")

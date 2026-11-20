@@ -24,6 +24,7 @@ private val colors = lightColorScheme(
     secondaryContainer = Color(0xFFE9DADC), onSecondaryContainer = Burgundy,
 )
 
+// Le thème applique une palette et des styles de texte communs au contenu Compose reçu en paramètre.
 @Composable
 fun GrappeTheme(content: @Composable () -> Unit) {
     MaterialTheme(colorScheme = colors, typography = Typography(

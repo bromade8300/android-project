@@ -15,6 +15,7 @@ class SecureSessionStore(context: Context) {
     private val preferences = context.getSharedPreferences("session", Context.MODE_PRIVATE)
     private val alias = "grappe-session"
 
+    // as? tente une conversion de type et renvoie null si elle échoue. let réutilise la clé si elle existe, sinon le Keystore en génère une.
     private fun key(): SecretKey {
         val store = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
         (store.getKey(alias, null) as? SecretKey)?.let { return it }
@@ -25,12 +26,14 @@ class SecureSessionStore(context: Context) {
         }.generateKey()
     }
 
+    // On chiffre la session puis on conserve le vecteur d’initialisation et le texte chiffré. Base64 permet de représenter ces octets sous forme de texte.
     fun write(value: String) {
         val cipher = Cipher.getInstance("AES/GCM/NoPadding").apply { init(Cipher.ENCRYPT_MODE, key()) }
         val encrypted = cipher.doFinal(value.toByteArray(Charsets.UTF_8))
         preferences.edit().putString("value", encode(cipher.iv) + ":" + encode(encrypted)).apply()
     }
 
+    // runCatching capture les erreurs de lecture ou de déchiffrement. getOrNull renvoie null en cas d’échec.
     fun read(): String? = runCatching {
         val parts = preferences.getString("value", null)?.split(":") ?: return null
         val cipher = Cipher.getInstance("AES/GCM/NoPadding").apply {
@@ -39,6 +42,7 @@ class SecureSessionStore(context: Context) {
         String(cipher.doFinal(decode(parts[1])), Charsets.UTF_8)
     }.getOrNull()
 
+    // Supprime la session enregistrée dans les préférences de ce fichier.
     fun clear() { preferences.edit().clear().apply() }
     private fun encode(bytes: ByteArray) = Base64.encodeToString(bytes, Base64.NO_WRAP)
     private fun decode(value: String) = Base64.decode(value, Base64.NO_WRAP)

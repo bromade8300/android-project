@@ -3,6 +3,7 @@
 Add-Type -AssemblyName System.Windows.Forms
 $adb = Join-Path $SdkDirectory 'platform-tools\adb.exe'
 $serial = 'emulator-5554'
+# Recupere la hierarchie de l'ecran par adb. Les fonctions suivantes s'en servent pour cibler et lire un champ.
 function Ui {
     & $adb -s $serial shell uiautomator dump /sdcard/grappe-input.xml | Out-Null
     return [xml](& $adb -s $serial shell cat /sdcard/grappe-input.xml)
@@ -17,6 +18,7 @@ function FieldText {
     $tree = Ui
     return ($tree.SelectNodes('//node[@class="android.widget.EditText"]') | Select-Object -First 1).text
 }
+# Memorise l'etat du presse-papiers Windows avant le test, puis le restaure dans finally.
 $previous = [Windows.Forms.Clipboard]::GetDataObject()
 $backup = [Windows.Forms.DataObject]::new()
 if ($previous) {

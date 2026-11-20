@@ -19,13 +19,16 @@ import fr.grappe.app.ui.theme.*
 @Composable
 fun HomeScreen(state: GrappeUiState, onEdit: (Tasting) -> Unit,
                onDelete: (Tasting) -> Unit, onRefresh: () -> Unit) {
+    // La recherche est sauvegardée en cas de rotation. La fiche à confirmer est un état temporaire.
     var query by rememberSaveable { mutableStateOf("") }
     var toDelete by remember { mutableStateOf<Tasting?>(null) }
+    // La liste garde les fiches du compte dont le nom ou la région contient la recherche, sans tenir compte de la casse.
     val wines = state.tastings.filter {
         it.ownerId == state.user?.id &&
             (it.wine.contains(query, true) || it.region.contains(query, true))
     }
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+        // Cette liste compose les éléments nécessaires à l’affichage. L’identifiant sert de clé stable pour chaque fiche.
         LazyColumn(Modifier.widthIn(max = 760.dp).fillMaxSize().padding(horizontal = 20.dp),
             contentPadding = PaddingValues(vertical = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item {
@@ -61,6 +64,7 @@ fun HomeScreen(state: GrappeUiState, onEdit: (Tasting) -> Unit,
             }
         }
     }
+    // La boîte de dialogue apparaît quand une fiche est sélectionnée. Seule la confirmation appelle onDelete.
     toDelete?.let { wine ->
         AlertDialog(onDismissRequest = { toDelete = null }, title = { Text("Supprimer ce vin ?") },
             text = { Text("« ${wine.wine} » sera retiré du carnet.") },

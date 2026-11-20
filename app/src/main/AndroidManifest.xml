@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Autorise les requêtes vers Supabase et SampleAPIs. -->
     <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:allowBackup="false"
@@ -7,6 +8,7 @@
         android:icon="@drawable/ic_grappe"
         android:supportsRtl="true"
         android:theme="@style/Theme.Grappe">
+        <!-- MAIN et LAUNCHER identifient l’écran lancé depuis l’icône de l’application. -->
         <activity android:name=".MainActivity" android:exported="true" android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

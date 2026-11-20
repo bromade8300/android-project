@@ -20,6 +20,7 @@ for name, file in [('Body','arial.ttf'), ('Bold','arialbd.ttf'), ('Title','georg
 C = {'cream':'#F0EBE2', 'paper':'#FBF8F2', 'ink':'#39332E', 'muted':'#72695F',
      'wine':'#601D30', 'border':'#D4C9BB', 'rose':'#E9DADC', 'white':'#FFFFFF'}
 
+# Les primitives de dessin alimentent le SVG et, si un document PDF est fourni, dessinent aussi sur sa page.
 class Drawing:
     def __init__(self, width, height, pdf=None):
         self.w, self.h, self.pdf = width, height, pdf
@@ -86,11 +87,13 @@ def nav(d,active):
         d.center(x,y+59,label,12,'Bold' if i==active else 'Body','ink' if i==active else 'muted')
     d.rect(d.w/2-44,d.h-12,88,3,'ink',2)
 
+# Réunit les éléments communs de l’écran avant de dessiner le contenu d’une maquette.
 def chrome(d,active=None):
     d.rect(0,0,d.w,d.h,'cream')
     d.text(22,25,'9:41',11,'Bold'); d.text(d.w-64,25,'Wi-Fi',9); d.rect(d.w-30,15,13,8,'ink',2)
     if active is not None: nav(d,active)
 
+# Produit la maquette de la bibliothèque en largeur téléphone ou tablette.
 def library(d,tablet=False):
     chrome(d,0)
     left=(d.w-600)/2 if tablet else 20
@@ -109,6 +112,7 @@ def library(d,tablet=False):
         d.text(left+16,y+80,rating,18,'Title','wine'); d.text(left+16,y+106,notes[0],13)
         d.icon(left+w-78,y+114,'edit'); d.icon(left+w-39,y+114,'trash','muted')
 
+# Utilise les mêmes champs pour représenter l’ajout et l’édition d’un vin.
 def editor(d,tablet=False,editing=False):
     chrome(d,1)
     x=(d.w-560)/2 if tablet else 20; w=560 if tablet else 320
@@ -148,6 +152,7 @@ def profile(d):
     d.text(20,477,'À propos de Grappe',14,'Bold','wine')
     button(d,513,'Se déconnecter',False)
 
+# Génère les maquettes de connexion et d’inscription selon le paramètre register.
 def auth(d,register=False):
     chrome(d)
     d.text(24,165 if not register else 125,'Grappe',34,'Title','wine')

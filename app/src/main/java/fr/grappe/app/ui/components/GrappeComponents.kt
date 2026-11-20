@@ -18,6 +18,7 @@ import coil.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
 import fr.grappe.app.ui.theme.*
 
+// Bouton commun aux écrans. () -> Unit représente une action sans argument ni valeur de retour.
 @Composable
 fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
     Button(onClick, modifier.heightIn(min = 48.dp), enabled = enabled, shape = RoundedCornerShape(10.dp)) {
@@ -25,6 +26,7 @@ fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifi
     }
 }
 
+// Affiche la photo lorsqu’une adresse existe et utilise le nom pour le visuel de secours.
 @Composable
 fun Avatar(name: String, modifier: Modifier = Modifier, photo: String = "") {
     Box(modifier.size(42.dp).clip(CircleShape).background(Color(0xFFE7D9D7)), contentAlignment = Alignment.Center) {
@@ -34,6 +36,7 @@ fun Avatar(name: String, modifier: Modifier = Modifier, photo: String = "") {
     }
 }
 
+// Les valeurs de 1 à 5 déterminent les étoiles remplies. La fonction onRate est facultative et permet de rendre les étoiles interactives.
 @Composable
 fun RatingStars(rating: Int, onRate: ((Int) -> Unit)? = null) {
     Row(verticalAlignment = Alignment.CenterVertically) {

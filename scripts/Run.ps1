@@ -10,6 +10,7 @@ if (-not $SkipBuild) {
     Push-Location $ProjectDirectory
     try { & .\gradlew.bat --stop } finally { Pop-Location }
 }
+# Le choix telephone ou tablette determine le profil virtuel et le port utilise par adb.
 $deviceName = if ($Tablet) { 'Grappe_Tablet' } else { 'Grappe_Phone' }
 $port = if ($Tablet) { 5556 } else { 5554 }
 $serial = "emulator-$port"
@@ -20,6 +21,7 @@ if ((& $adb devices) -notmatch "$serial\s+device") {
     & "$PSScriptRoot\Configure-EmulatorInput.ps1" -DeviceName $deviceName
     Start-Process -FilePath $emulator -ArgumentList @('-avd', $deviceName, '-port', $port, '-gpu', 'auto', '-memory', '1536', '-cores', '2', '-no-snapshot-load') -WindowStyle Hidden
 }
+# Attend la fin du demarrage Android avant d'installer l'APK.
 $deadline = (Get-Date).AddMinutes(4)
 do {
     Start-Sleep -Seconds 2
@@ -29,6 +31,7 @@ do {
 # Le clavier du PC suffit ; éviter le tutoriel de stylet et le clavier tactile superposé.
 & $adb -s $serial shell settings put secure stylus_handwriting_enabled 0
 & $adb -s $serial shell settings put secure show_ime_with_hard_keyboard 0
+# adb installe l'APK choisi, puis demarre MainActivity avec l'identifiant de cette variante.
 $apk = Join-Path $ProjectDirectory "app\build\outputs\apk\$Mode\debug\app-$Mode-debug.apk"
 & $adb -s $serial install -r $apk
 if ($LASTEXITCODE -ne 0) { throw "Installation de l'APK impossible." }

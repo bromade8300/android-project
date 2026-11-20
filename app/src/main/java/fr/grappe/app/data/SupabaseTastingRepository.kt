@@ -11,6 +11,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 private data class TastingRow(
     val id: String,
+    // @SerialName relie le nom Kotlin au nom attendu dans le JSON de Supabase.
     @SerialName("owner_id") val ownerId: String,
     val author: String,
     val wine: String,
@@ -22,10 +23,12 @@ private data class TastingRow(
     @SerialName("photo_uri") val photoUri: String,
     @SerialName("created_at") val createdAt: Long,
 ) {
+    // Convertit une ligne reçue du serveur en fiche utilisée par l’application.
     fun toModel() = Tasting(id, ownerId, author, wine, vintage, color, region, rating, notes, photoUri, createdAt)
 }
 
 class SupabaseTastingRepository(private val service: SupabaseService) : TastingRepository {
+    // GET lit les lignes du propriétaire, de la plus récente à la plus ancienne. Les autorisations sont définies séparément côté serveur.
     override suspend fun load(ownerId: String): List<Tasting> {
         val token = service.accessToken()
         val response = service.client.get(service.endpoint("/rest/v1/tastings")) {
@@ -37,6 +40,7 @@ class SupabaseTastingRepository(private val service: SupabaseService) : TastingR
         return response.body<List<TastingRow>>().map { it.toModel() }
     }
 
+    // Le POST demande à Supabase de fusionner la ligne si son identifiant existe déjà. La même opération sert à l’ajout et à la modification.
     override suspend fun save(tasting: Tasting) {
         val token = service.accessToken()
         val response = service.client.post(service.endpoint("/rest/v1/tastings")) {
@@ -47,6 +51,7 @@ class SupabaseTastingRepository(private val service: SupabaseService) : TastingR
         service.ensureSuccess(response.status)
     }
 
+    // DELETE cible la combinaison de l’identifiant de la fiche et de celui du propriétaire.
     override suspend fun delete(id: String, ownerId: String) {
         val token = service.accessToken()
         val response = service.client.delete(service.endpoint("/rest/v1/tastings")) {
@@ -56,6 +61,7 @@ class SupabaseTastingRepository(private val service: SupabaseService) : TastingR
         service.ensureSuccess(response.status)
     }
 
+    // Envoie les octets JPEG dans le dossier du compte et renvoie l’URL publique de la photo.
     suspend fun uploadPhoto(ownerId: String, bytes: ByteArray): String {
         val path = "$ownerId/${java.util.UUID.randomUUID()}.jpg"
         val token = service.accessToken()

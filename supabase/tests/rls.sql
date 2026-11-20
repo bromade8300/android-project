@@ -1,6 +1,7 @@
 -- Test d'intégration à exécuter avec le rôle administrateur via le MCP Supabase.
 -- Deux identités temporaires et une dégustation sont créées, puis annulées par ROLLBACK.
 -- Aucun e-mail n'est envoyé et aucune donnée de test ne reste dans le projet.
+-- La transaction contient les données de test. ROLLBACK les efface à la fin.
 begin;
 
 select set_config('test.owner_id', gen_random_uuid()::text, true);
@@ -110,5 +111,6 @@ begin
     end;
 end $$;
 
+-- Annule les opérations effectuées depuis BEGIN, y compris la création des comptes de test.
 rollback;
 select 'PASS: CRUD auteur, lecture partagée, isolation des écritures, contraintes et accès anonyme' as result;

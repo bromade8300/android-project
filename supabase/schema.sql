@@ -2,6 +2,7 @@
 -- Les politiques RLS protègent les données même si un client modifie ses requêtes.
 create table if not exists public.tastings (
     id uuid primary key,
+    -- La clé étrangère relie la fiche au compte et supprime ses fiches lorsque le compte est supprimé.
     owner_id uuid not null references auth.users(id) on delete cascade,
     author text not null check (char_length(author) between 1 and 80),
     wine text not null check (char_length(trim(wine)) between 1 and 120),
@@ -14,6 +15,7 @@ create table if not exists public.tastings (
     created_at bigint not null
 );
 
+-- Les index facilitent le tri par date et la recherche par propriétaire.
 create index if not exists tastings_created_at_idx on public.tastings(created_at desc);
 create index if not exists tastings_owner_idx on public.tastings(owner_id);
 alter table public.tastings enable row level security;
@@ -21,12 +23,14 @@ alter table public.tastings enable row level security;
 revoke all on public.tastings from anon, authenticated;
 grant select, insert, update, delete on public.tastings to authenticated;
 
+-- Cette politique autorise la lecture à tous les comptes connectés. Le filtre du carnet est appliqué dans l’application.
 drop policy if exists "Connected users read tastings" on public.tastings;
 create policy "Connected users read tastings" on public.tastings
     for select to authenticated using ((select auth.uid()) is not null);
 drop policy if exists "Owners create tastings" on public.tastings;
 create policy "Owners create tastings" on public.tastings
     for insert to authenticated with check ((select auth.uid()) = owner_id);
+-- USING vérifie le propriétaire de la ligne existante. WITH CHECK vérifie celui de la ligne après modification.
 drop policy if exists "Owners update tastings" on public.tastings;
 create policy "Owners update tastings" on public.tastings
     for update to authenticated using ((select auth.uid()) = owner_id)

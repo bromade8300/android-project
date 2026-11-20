@@ -17,6 +17,7 @@ import fr.grappe.app.ui.components.*
 /** Un formulaire commun à la création et à la modification. */
 @Composable
 fun EditorScreen(initial: Tasting, editing: Boolean, busy: Boolean, onSave: (Tasting) -> Unit, onCancel: () -> Unit) {
+    // Chaque champ part de la fiche initiale. rememberSaveable conserve la saisie lors d’une recréation comme une rotation. initial.id réinitialise les champs si la fiche change.
     var wine by rememberSaveable(initial.id) { mutableStateOf(initial.wine) }
     var vintage by rememberSaveable(initial.id) { mutableStateOf(initial.vintage) }
     var color by rememberSaveable(initial.id) { mutableStateOf(initial.color) }
@@ -24,6 +25,7 @@ fun EditorScreen(initial: Tasting, editing: Boolean, busy: Boolean, onSave: (Tas
     var rating by rememberSaveable(initial.id) { mutableIntStateOf(initial.rating) }
     var notes by rememberSaveable(initial.id) { mutableStateOf(initial.notes) }
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+        // Modifier décrit la taille et la disposition. La largeur maximale améliore la lecture sur grand écran et le défilement garde les champs accessibles.
         Column(Modifier.widthIn(max = 600.dp).fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(if (editing) "Modifier le vin" else "Ajouter un vin", style = MaterialTheme.typography.headlineMedium)
@@ -31,6 +33,7 @@ fun EditorScreen(initial: Tasting, editing: Boolean, busy: Boolean, onSave: (Tas
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(vintage, { vintage = it.take(4) }, label = { Text("Millésime") }, singleLine = true,
                     enabled = !busy, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.weight(1f))
+                // remember garde l’ouverture du menu entre deux recompositions. La sélection change la couleur puis ferme le menu.
                 var expanded by remember { mutableStateOf(false) }
                 Box(Modifier.weight(1f)) {
                     OutlinedButton({ expanded = true }, enabled = !busy, modifier = Modifier.fillMaxWidth().height(64.dp)) { Text(color) }
@@ -45,6 +48,7 @@ fun EditorScreen(initial: Tasting, editing: Boolean, busy: Boolean, onSave: (Tas
             Text("Ma note : $rating/5", style = MaterialTheme.typography.titleMedium)
             RatingStars(rating, { if (!busy) rating = it })
             OutlinedTextField(notes, { notes = it }, label = { Text("Notes (facultatif)") }, minLines = 2, enabled = !busy, modifier = Modifier.fillMaxWidth())
+            // copy construit une fiche avec les nouvelles valeurs et garde l’identifiant. onSave transmet cette fiche à l’écran parent.
             PrimaryButton("Enregistrer", {
                 onSave(initial.copy(wine = wine.trim(), vintage = vintage, color = color,
                     region = region.trim(), rating = rating, notes = notes.trim()))

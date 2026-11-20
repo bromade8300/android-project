@@ -16,8 +16,10 @@ import fr.grappe.app.BuildConfig
 import fr.grappe.app.ui.components.*
 import fr.grappe.app.ui.theme.*
 
+// L’écran choisit entre l’entrée en démo et le formulaire de compte selon la variante compilée.
 @Composable
 fun AuthScreen(busy: Boolean, onDemo: () -> Unit, onAuthenticate: (String, String, String, Boolean) -> Unit) {
+    // register sélectionne l’inscription ou la connexion. Le nom et l’e-mail survivent à une recréation de l’écran.
     var register by rememberSaveable { mutableStateOf(false) }
     var name by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
@@ -40,6 +42,7 @@ fun AuthScreen(busy: Boolean, onDemo: () -> Unit, onAuthenticate: (String, Strin
                     visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     supportingText = { Text("8 caractères minimum") }, modifier = Modifier.fillMaxWidth())
                 Spacer(Modifier.height(18.dp))
+                // Le bouton transmet les champs au ViewModel via la fonction reçue. !busy le désactive pendant une opération.
                 PrimaryButton(if (register) "Créer mon compte" else "Se connecter",
                     { onAuthenticate(name, email, password, register) }, Modifier.fillMaxWidth(), !busy)
                 TextButton({ register = !register }, enabled = !busy) {

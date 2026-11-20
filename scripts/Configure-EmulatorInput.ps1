@@ -2,6 +2,7 @@ param([string]$DeviceName = 'Grappe_Phone')
 $ErrorActionPreference = 'Stop'
 
 # À appeler avant le démarrage : l'émulateur lit le matériel au boot.
+# Localise la configuration de l'appareil virtuel, soit via la variable d'environnement, soit dans le dossier utilisateur.
 $avdRoot = if ($env:ANDROID_AVD_HOME) { $env:ANDROID_AVD_HOME } else { Join-Path $env:USERPROFILE '.android\avd' }
 $config = Join-Path $avdRoot "$DeviceName.avd\config.ini"
 if (-not (Test-Path -LiteralPath $config)) { throw "Configuration AVD introuvable : $config" }
@@ -9,6 +10,7 @@ $text = [IO.File]::ReadAllText($config)
 if (-not (Test-Path -LiteralPath "$config.before-keyboard.bak")) {
     Copy-Item -LiteralPath $config -Destination "$config.before-keyboard.bak"
 }
+# Met a jour les reglages materiels du clavier apres avoir cree une sauvegarde de la configuration.
 foreach ($setting in @(@('hw.keyboard', 'yes'), @('hw.keyboard.lid', 'no'))) {
     $pattern = '(?m)^' + [regex]::Escape($setting[0]) + '=.*$'
     $line = $setting[0] + '=' + $setting[1]

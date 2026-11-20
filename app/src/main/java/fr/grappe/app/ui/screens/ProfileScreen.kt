@@ -22,6 +22,7 @@ import fr.grappe.app.ui.GrappeUiState
 import fr.grappe.app.ui.components.*
 import fr.grappe.app.ui.theme.*
 
+// Le profil affiche l’utilisateur courant et délègue les actions de compte aux fonctions reçues en paramètres.
 @Composable
 fun ProfileScreen(state: GrappeUiState, onProfile: (String, String, () -> Unit) -> Unit,
                   onPassword: (String) -> Unit, onAbout: () -> Unit, onSignOut: () -> Unit) {
@@ -32,12 +33,14 @@ fun ProfileScreen(state: GrappeUiState, onProfile: (String, String, () -> Unit) 
     var passwordDialog by remember { mutableStateOf(false) }
     var password by remember { mutableStateOf("") }
     val context = LocalContext.current
+    // Le sélecteur Android fournit une URI vers le document choisi. La permission persistante permet de relire l’image plus tard.
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let {
             context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
             photo = it.toString()
         }
     }
+    // Les statistiques sont calculées à partir des fiches et de l’identifiant du compte affiché.
     val stats = wineStats(state.tastings, user.id)
     Column(Modifier.fillMaxSize().wrapContentWidth(Alignment.CenterHorizontally).widthIn(max = 600.dp).verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text("Mon profil", style = MaterialTheme.typography.headlineMedium)
@@ -48,6 +51,7 @@ fun ProfileScreen(state: GrappeUiState, onProfile: (String, String, () -> Unit) 
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
             ProfileStat("${stats.count}", "vins bus")
             ProfileStat(stats.regions.toString(), "régions")
+            // La moyenne est affichée à une décimale avec le format français. ?: affiche un tiret quand la moyenne est absente.
             ProfileStat(stats.average?.let { String.format(java.util.Locale.FRANCE, "%.1f", it) } ?: "—", "note moyenne")
         }
         OutlinedButton({ edit = !edit }, Modifier.fillMaxWidth(), enabled = !state.busy) { Text("Modifier mon profil") }
@@ -67,6 +71,7 @@ fun ProfileScreen(state: GrappeUiState, onProfile: (String, String, () -> Unit) 
         TextButton(onAbout) { Icon(Icons.Outlined.Info, null); Spacer(Modifier.width(12.dp)); Text("À propos de Grappe") }
         OutlinedButton(onSignOut, Modifier.fillMaxWidth(), enabled = !state.busy) { Text("Se déconnecter") }
     }
+    // La boîte de dialogue reste temporaire. La confirmation transmet le mot de passe puis vide le champ.
     if (passwordDialog) AlertDialog(onDismissRequest = { passwordDialog = false; password = "" },
         title = { Text("Nouveau mot de passe") },
         text = { OutlinedTextField(password, { password = it }, label = { Text("8 caractères minimum") }, visualTransformation = PasswordVisualTransformation()) },
@@ -74,6 +79,7 @@ fun ProfileScreen(state: GrappeUiState, onProfile: (String, String, () -> Unit) 
         dismissButton = { TextButton({ passwordDialog = false; password = "" }) { Text("Annuler") } })
 }
 
+// Ce composant réutilise la même présentation pour une valeur et son libellé.
 @Composable
 private fun ProfileStat(value: String, label: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -82,6 +88,7 @@ private fun ProfileStat(value: String, label: String) {
     }
 }
 
+// Affiche les informations de la variante courante et les résultats de l’API externe quand l’utilisateur les demande.
 @Composable
 fun AboutScreen(state: GrappeUiState, onDiscover: () -> Unit, onBack: () -> Unit) {
     Column(Modifier.fillMaxSize().wrapContentWidth(Alignment.CenterHorizontally).widthIn(max = 600.dp).verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
